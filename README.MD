@@ -2,9 +2,16 @@
 
 Vulkan is a new API, here's an attempt to write some startup
 
-#Requisites
+##Requisites
 
 You will need
 1. Visual Studio
 2. Vulkan Drivers for your GPU
 3. Vulkan Windows SDK from vulkan.lunarg.com
+
+##Getting Started
+https://www.khronos.org/vulkan/
+http://vulkan.lunarg.com/
+https://github.com/SaschaWillems/Vulkan
+https://renderdoc.org/vulkan-in-30-minutes.html
+
