@@ -69,6 +69,16 @@ int main(){
 
 
 	/** 3. Query for the supported queues **/
+
+	/** From renderdocs vulkan
+	Command buffers are submitted to a VkQueue. 
+	The notion of queues are how work becomes serialised to be passed to the GPU. 
+	A VkPhysicalDevice (remember way back? The GPU handle) can report a number of queue families with different capabilities. 
+	e.g. a graphics queue family and a compute-only queue family. 
+	When you create your device you ask for a certain number of queues from each family, and then you can enumerate them 
+	from the device after creation with vkGetDeviceQueue().
+	**/
+
 	uint32_t queue_count = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(gpus[0], &queue_count, NULL);
 	if(queue_count <= 0){
@@ -89,7 +99,7 @@ int main(){
 
 	idx = -1;
 	while(++idx < queue_count){
-		if(queue_props[idx].queueFlags & VK_QUEUE_GRAPHICS_BIT){
+		if(queue_props[idx].queueFlags & VK_QUEUE_GRAPHICS_BIT){	//Look for a queue that has Graphics capabilities
 			qi.queueFamilyIndex = idx;
 			break;
 		}
