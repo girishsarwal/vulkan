@@ -61,6 +61,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 
 
 	/** Window creation ends, all we need is the hModule, hWnd, width and height to proceed **/
+
 	/** Vulkan stuff **/
 
 	VkApplicationInfo ai = {};
@@ -225,7 +226,77 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, 
 		exit(-1);
 	}
 
+	VkPresentModeKHR selectedPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+	idx = -1;
+	while(++idx < presentModeCount){
+		if(presentModes[idx] == VK_PRESENT_MODE_MAILBOX_KHR){
+			selectedPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+			break;
+		} else if((presentModes[idx] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+			selectedPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+			break;
+		}
+	}
 
+
+	/** select best possible format **/
+
+	
+	VkExtent2D swapChainExtent;		/**Extent is a super cool structure. closer to human sense than x,y,(z) **/
+									/** there is a VkExtent3D as well **/
+	if(capabilities.currentExtent.width == (uint32_t)-1){
+		swapChainExtent.width = WINDOW_WIDTH;
+		swapChainExtent.height = WINDOW_HEIGHT;
+	} else {
+		swapChainExtent = capabilities.currentExtent;
+	}
+
+	/** see what present modes are available and use graceful degradation to 
+	select the best one 
+	VK_PRESENT_MODE_MAILBOX_KHR > VK_PRESENT_MODE_IMMEDIATE_KHR > VK_PRESENT_MODE_FIFO
+	**/
+
+	/** lets get the swap chain ready **/
+	uint32_t desiredSwapChainImageCount = capabilities.minImageCount + 1;
+	if(desiredSwapChainImageCount > capabilities.maxImageCount){
+		desiredSwapChainImageCount = capabilities.maxImageCount;			//limit to the max count;
+	}
+	
+	VkSurfaceTransformFlagBitsKHR transformFlagBits = capabilities.currentTransform;
+	if((capabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR){
+		transformFlagBits = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	}
+
+	VkSwapchainCreateInfoKHR swcci = {};
+	swcci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swcci.pNext = NULL;
+	swcci.surface = surface;
+	swcci.minImageCount = capabilities.minImageCount;
+	swcci.imageFormat = formats[0].format;
+	swcci.imageExtent.width = swapChainExtent.width;
+	swcci.imageExtent.height = swapChainExtent.height;
+	swcci.preTransform = transformFlagBits;
+	swcci.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	swcci.imageArrayLayers = 1;
+	swcci.presentMode = selectedPresentMode;
+	swcci.oldSwapchain = NULL;
+	swcci.clipped = true;
+	swcci.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+	swcci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	swcci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	swcci.queueFamilyIndexCount = 0;
+	swcci.pQueueFamilyIndices = NULL;
+
+	VkSwapchainKHR swapChain;
+	res = vkCreateSwapchainKHR(device, &swcci, NULL, &swapChain);
+
+	uint32_t swapChainImageCount = 0;
+	res = vkGetSwapchainImagesKHR(device, swapChain, &swapChainImageCount, NULL);
+
+	VkImage* swapChainImages = (VkImage*) malloc(sizeof(VkImage) * swapChainImageCount);
+	res = vkGetSwapchainImagesKHR(device, swapChain, &swapChainImageCount, swapChainImages);
+
+	/** yay! we have a swap chain **/
 
 	VkCommandPoolCreateInfo cpci = {};
 	cpci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
